@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Hello Redis</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.34.0/codemirror.css">
+    <style>
+        #value-container {
+            min-height: 10em;
+        }
+
+        .CodeMirror {
+            height: 100%;
+        }
+        .CodeMirror-linenumbers {
+            background-color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-light bg-light mb-4">
+        <h1>Hello Redis</h1>
+        <div>
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <button id="refresh" class="btn btn-info">Refresh</button>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-2">
+                <ul id="keys" class="list-group"></ul>
+            </div>
+            <div class="col-10 d-flex flex-column align-items-stretch">
+                <div class="input-group mb-3 w-100">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Key</span>
+                    </div>
+                    <input type="text" id="key" class="form-control" />
+                </div>
+                <div id="value-container" class="mb-3 form-control"></div>
+                <div class="mb-3">
+                    <button id="save" class="btn btn-outline-primary">Save</button>
+                    <button id="delete" class="btn btn-outline-danger">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.34.0/codemirror.js"></script>
+
+    <script>
+        function deleteKey(key, cb) {
+            $.ajax("/data/" + key, {
+                method: "DELETE",
+            }).done(cb);
+        }
+
+        function getSelectedKey() {
+            return $("#key").val();
+        }
+
+        function getValue(key, cb) {
+            $.ajax("/data/" + key).done(function(data) {
+                cb(JSON.stringify(data));
+            });
+        }
+
+        function loadKeys() {
+            $.ajax("/data").done(function(data) {
+                var previousSelectedKey = getSelectedKey();
+                var itemToSelect = null;
+
+                var keysElement = $("#keys");
+                keysElement.empty();
+                valueEditor.setValue("");
+                setSelectedKey(undefined);
+
+                data.keys.sort();
+
+                data.keys.forEach(function(key) {
+                    var itemElement = $("<li>");
+                    itemElement.addClass("list-group-item");
+                    itemElement.text(key);
+                    itemElement.click(function() {
+                        selectKey(key, itemElement);
+                    });
+
+                    if (previousSelectedKey && previousSelectedKey === key) {
+                        itemToSelect = itemElement;
+                    }
+
+                    keysElement.append(itemElement);
+                });
+
+                if (previousSelectedKey && itemToSelect) {
+                    selectKey(previousSelectedKey, itemToSelect);
+                }
+            });
+        }
+
+        function selectKey(key, itemElement) {
+            var keysElement = $("#keys");
+            keysElement.children().each(function(index, child) {
+                $(child).removeClass("active");
+            });
+            itemElement.addClass("active");
+
+            getValue(key, function(value) {
+                setSelectedKey(key);
+                const prettyValue = JSON.stringify(JSON.parse(value), null, 2);
+                valueEditor.setValue(prettyValue);
+            });
+        }
+
+        function setSelectedKey(key) {
+            $("#key").val(key || "");
+        }
+
+        function setValue(key, value, cb) {
+            $.ajax("/data/" + key, {
+                method: "PUT",
+                contentType: "application/json",
+                data: value,
+                processData: false,
+            }).done(cb);
+        }
+    </script>
+
+    <script>
+        var valueEditor = null;
+
+        $(function() {
+            valueEditor = new CodeMirror(
+                document.getElementById("value-container"),
+                {
+                    mode: { name: "javascript", json: true },
+                    lineNumbers: true,
+                    smartIndent: true,
+                },
+            );
+
+            $("#refresh").click(function() {
+                loadKeys();
+            });
+            $("#save").click(function() {
+                var key = getSelectedKey();
+                var value = valueEditor.getValue();
+                if (key) {
+                    setValue(key, value, function() {
+                        loadKeys();
+                    });
+                }
+            });
+            $("#delete").click(function() {
+                var key = getSelectedKey();
+                if (key) {
+                    deleteKey(key, function() {
+                        loadKeys();
+                    });
+                }
+            });
+
+            loadKeys();
+        });
+    </script>
+
+</body>
+</html>
