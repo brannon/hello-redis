@@ -14,6 +14,12 @@ function main(opts) {
         host: opts["redis-host"],
         port: opts["redis-port"] || 6379,
         password: opts["redis-password"],
+        socket_keepalive: true,
+        retry_strategy: function(opts) {
+            console.error("ERR: Lost redis connection! Will reconnect after 5 seconds.");
+            console.error(`ERR: Reason: ${opts.error}`);
+            return 5000;
+        },
     });
 
     const app = express();
