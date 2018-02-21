@@ -1,6 +1,5 @@
 FROM node:9.5-alpine
-RUN mkdir -p /app && \
-    mkdir -p /app/html
+RUN mkdir -p /app
 
 WORKDIR /app
 
@@ -9,5 +8,4 @@ RUN npm install
 
 ENTRYPOINT [ "npm", "start", "--"]
 
-COPY public /app/public/
 COPY app.js /app

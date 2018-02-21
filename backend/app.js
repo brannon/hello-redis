@@ -1,4 +1,5 @@
 const bodyParser = require("body-parser");
+const cors = require("cors");
 const express = require("express");
 const minimist = require("minimist");
 const path = require("path");
@@ -24,7 +25,7 @@ function main(opts) {
 
     const app = express();
 
-    app.use(express.static(path.join(__dirname, "public")));
+    app.use(cors());
     app.use(bodyParser.json());
 
     app.get("/data", (req, res, next) => {

@@ -60,8 +60,16 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.34.0/mode/javascript/javascript.min.js"></script>
 
     <script>
+        var dataHost = "";
+        if (window.location.href.startsWith("http://localhost")) {
+            // For local dev, the backend runs on another port
+            dataHost = "http://localhost:3000/";
+        } else {
+            dataHost = window.location.href;
+        }
+
         function deleteKey(key, cb) {
-            $.ajax("/data/" + key, {
+            $.ajax(dataHost + "data/" + key, {
                 method: "DELETE",
             }).done(cb);
         }
@@ -71,13 +79,13 @@
         }
 
         function getValue(key, cb) {
-            $.ajax("/data/" + key).done(function(data) {
+            $.ajax(dataHost + "data/" + key).done(function(data) {
                 cb(JSON.stringify(data));
             });
         }
 
         function loadKeys() {
-            $.ajax("/data").done(function(data) {
+            $.ajax(dataHost + "data").done(function(data) {
                 var previousSelectedKey = getSelectedKey();
                 var itemToSelect = null;
 
@@ -128,7 +136,7 @@
         }
 
         function setValue(key, value, cb) {
-            $.ajax("/data/" + key, {
+            $.ajax(dataHost + "data/" + key, {
                 method: "PUT",
                 contentType: "application/json",
                 data: value,

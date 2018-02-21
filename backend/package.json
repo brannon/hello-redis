@@ -1,7 +1,7 @@
 {
-  "name": "hello-redis",
+  "name": "hello-redis-backend",
   "version": "1.0.0",
-  "description": "Test site with redis dependency",
+  "description": "Test backend with redis dependency",
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
@@ -12,6 +12,7 @@
   "dependencies": {
     "bluebird": "^3.5.1",
     "body-parser": "^1.18.2",
+    "cors": "^2.8.4",
     "express": "^4.16.2",
     "minimist": "^1.2.0",
     "redis": "^2.8.0"
